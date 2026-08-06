@@ -9,11 +9,15 @@ import com.aventstack.extentreports.Status;
 
 public class TestListeners implements ITestListener{
 	ThreadLocal<ExtentTest>test=new ThreadLocal<>();
+	private final static ThreadLocal<String>TestNameTr=new ThreadLocal<>();
+	public static String testName;
 	ExtentTest test1;
 	@Override
 	public void onTestStart(ITestResult result) {
-		test1=Reporter.createReport(result.getMethod().getMethodName());
-		test.set(test1);;
+		TestNameTr.set(result.getMethod().getMethodName().toString());
+		test1=Reporter.createReport(TestNameTr.get());
+		test.set(test1);
+		testName=TestNameTr.get();
 		
 	}
 
@@ -21,6 +25,7 @@ public class TestListeners implements ITestListener{
 	public void onTestSuccess(ITestResult result){
 		test.get().log(Status.PASS,"");
 		try {
+			if(BaseTest.getWebDriver()!=null)
 			test.get().addScreenCaptureFromPath(addScreenshotToListener(result));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -32,6 +37,7 @@ public class TestListeners implements ITestListener{
 	public void onTestFailure(ITestResult result) {
 		test.get().fail(result.getThrowable());
 		try {
+			if(BaseTest.getWebDriver()!=null)
 			test.get().addScreenCaptureFromPath(addScreenshotToListener(result));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
