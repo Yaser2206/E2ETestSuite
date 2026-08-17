@@ -9,6 +9,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
+import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
 import E2ETestSuite.pageObjects.AddToCartAndCheckout;
@@ -19,8 +20,10 @@ import E2ETestSuite.pageObjects.Orders;
 import webUtils.BaseTest;
 import webUtils.Utils;
 
+@Listeners(webUtils.TestListeners.class)
 public class E2ETest extends BaseTest{	
 	boolean flag;
+	
 	
 	@Test(groups={"smoke,regression"})
 	public void LoginTest() throws IOException {

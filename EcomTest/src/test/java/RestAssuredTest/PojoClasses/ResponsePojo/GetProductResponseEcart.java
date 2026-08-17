@@ -1,6 +1,8 @@
 package RestAssuredTest.PojoClasses.ResponsePojo;
 
-public class GetProductResponseEcart {
+import java.io.Serializable;
+
+public class GetProductResponseEcart implements Serializable {
 	private DataGetProductEcart data;
 	private String message;
 	public DataGetProductEcart getData() {
