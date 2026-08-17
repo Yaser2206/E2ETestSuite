@@ -9,6 +9,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +82,19 @@ public class Utils {
 		prop.store(fos, key+" is added with the value- "+value);
 		fos.close();
 	}
+	public static void writeToApiConfig(String key,List<String> values) throws IOException {
+		FileInputStream fis=new FileInputStream(BaseTest.apiPropertiesPath);
+		prop.load(fis);
+		fis.close();
+		String temp="";
+		for(String value:values ) {
+			temp+=value +" _@extenderi_ ";
+		}
+		FileOutputStream fos=new FileOutputStream(BaseTest.apiPropertiesPath);
+		prop.setProperty(key, temp);
+		prop.store(fos, key+" is added with the value- "+temp);
+		fos.close();
+	}
 
 	public static String serializeObject(Object value) throws IOException {
 		try(FileOutputStream fos=new FileOutputStream(TestListeners.testName+".ser");
@@ -103,6 +117,15 @@ public class Utils {
 		String value=prop.getProperty(key);
 		fis.close();
 		return value;
+	}
+	public static List<String> readApiListProperty(String key) throws IOException {
+		List<String>values=new ArrayList();
+		FileInputStream fis=new FileInputStream(BaseTest.apiPropertiesPath);
+		prop.load(fis);
+		String value=prop.getProperty(key);
+		values=Arrays.asList(value.split(" _@extenderi_ "));
+		fis.close();
+		return values;
 	}
 	
 	public static String readGlobalProperty(String key) throws IOException {

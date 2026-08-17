@@ -12,17 +12,23 @@ import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
 import RestAssuredTest.PojoClasses.RequestPojo.AddToEcartRequest;
+import RestAssuredTest.PojoClasses.RequestPojo.CreateOrdersEcart;
 import RestAssuredTest.PojoClasses.RequestPojo.GetAllProductsRequestEcart;
 import RestAssuredTest.PojoClasses.RequestPojo.LoginUserRequestEcart;
+import RestAssuredTest.PojoClasses.RequestPojo.OrdersEcart;
 import RestAssuredTest.PojoClasses.RequestPojo.RegisterUserEcart;
+import RestAssuredTest.PojoClasses.ResponsePojo.CreateOrdersEcartResponse;
 import RestAssuredTest.PojoClasses.ResponsePojo.DataGetAllProductsEcart;
 import RestAssuredTest.PojoClasses.ResponsePojo.DataGetProductEcart;
 import RestAssuredTest.PojoClasses.ResponsePojo.GetAllProductsResponseEcart;
 import RestAssuredTest.PojoClasses.ResponsePojo.GetProductResponseEcart;
 import RestAssuredTest.PojoClasses.ResponsePojo.LoginResponseEcart;
+import RestAssuredTest.PojoClasses.ResponsePojo.OrderProductDataEcart;
+import RestAssuredTest.PojoClasses.ResponsePojo.OrdersHistoryEcart;
 import RestAssuredTest.PojoClasses.ResponsePojo.RegisterUserResponseEcart;
 import io.restassured.RestAssured;
 import io.restassured.path.json.JsonPath;
+import io.restassured.response.Response;
 import webUtils.Utils;
 
 @Listeners(webUtils.TestListeners.class)
@@ -31,6 +37,7 @@ public class E2EEcartAPITest {
 	String userId = "";
 	String iPhoneProductId = "";
 	String serializedFileName="";
+	List<String> orderIds=null;
 
 	@BeforeTest
 	void setUp() {
@@ -139,13 +146,81 @@ public class E2EEcartAPITest {
 	}
 	
 	
+	@Test
+	public void createOrder() throws IOException {
+		List<String> productsOrdered;
+		token=Utils.readApiProperty("token");
+		iPhoneProductId= Utils.readApiProperty("iPhoneProductId");
+		OrdersEcart orders=new OrdersEcart();
+		CreateOrdersEcart orderData=new CreateOrdersEcart();
+		orderData.setCountry("India");
+		orderData.setProductOrderedId(iPhoneProductId);
+		List<CreateOrdersEcart> ordersDataList=new ArrayList();
+		ordersDataList.add(orderData);
+		orders.setOrders(ordersDataList);
+		
+		String reponseStr=given().header("authorization",token).contentType("application/json").body(orders).
+		when().post("api/ecom/order/create-order").
+		then().log().all().extract().response().asString();
+		
+		CreateOrdersEcartResponse createOrdersEcartResponse=new CreateOrdersEcartResponse();
+		JsonPath jp=new JsonPath(reponseStr);
+		orderIds=jp.get("orders");
+		productsOrdered=jp.get("productOrderId");
+		createOrdersEcartResponse.setOrders(orderIds);
+		createOrdersEcartResponse.setProductIds(productsOrdered);
+		Assert.assertEquals(jp.get("message"), "Order Placed Successfully");
+		Utils.writeToApiConfig("OrderID", createOrdersEcartResponse.getOrders());
+		
+	}
+	
+	@Test
+	public void getOrders() throws IOException {
+		token=Utils.readApiProperty("token");
+		orderIds=Utils.readApiListProperty("OrderID");
+		boolean flag=false;
+		List<String> orderedPlaced=new ArrayList();
+		String lastOrderId=orderIds.get(0);
+		String userID=Utils.readApiProperty("userId");
+		OrdersHistoryEcart ordersHistoryEcart=given().header("authorization",token)
+				.when().get("api/ecom/order/get-orders-for-customer/"+userID)
+				.then().log().all().extract().response().as(OrdersHistoryEcart.class);
+		int count =ordersHistoryEcart.getCount();
+		String orderedId = "";
+		if(count==1) {
+			orderedId=ordersHistoryEcart.getData().get(count-1).get_id();
+			if(orderedId.equals(lastOrderId))
+				flag=true;
+			orderedPlaced.add(orderedId);
+		}
+		
+		Assert.assertEquals(ordersHistoryEcart.getMessage(), "Orders fetched for customer Successfully");
+		if(!flag)
+		for(int i=0;i<count;i++) {
+			orderedId=ordersHistoryEcart.getData().get(i).get_id();
+			if(orderedId.equals(lastOrderId))
+				flag=true;
+			orderedPlaced.add(orderedId);
+		}
+		Assert.assertEquals(flag,true);
+		Utils.writeToApiConfig("ordersPlaced", orderedPlaced);
+	}
 	
 	
-	
-	
-	
-	
-	
-	
-	
+	@Test(priority=10)
+	public void deleteOrders() throws IOException {
+		token=Utils.readApiProperty("token");
+		orderIds=Utils.readApiListProperty("ordersPlaced");
+		int count=orderIds.size();
+		Response response;
+		for(String orderID: orderIds) {
+			System.out.println(orderID);
+			response=given().header("authorization",token).
+			when().delete("api/ecom/order/delete-order/"+orderID);
+			Assert.assertEquals(response.getStatusCode(), 200);
+			Assert.assertEquals(response.jsonPath().get("message"), "Orders Deleted Successfully");
+		}
+		
+	}
 }
+	
