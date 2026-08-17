@@ -1,6 +1,8 @@
 package RestAssuredTest.PojoClasses.ResponsePojo;
 
-public class DataGetProductEcart {
+import java.io.Serializable;
+
+public class DataGetProductEcart implements Serializable {
 	private String _id;
 	private String productName;
 	private String productCategory;

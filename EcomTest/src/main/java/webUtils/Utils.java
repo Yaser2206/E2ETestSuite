@@ -2,8 +2,11 @@ package webUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,6 +16,7 @@ import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -58,23 +62,40 @@ public class Utils {
 	
 	public static void writeToGlobalConfig(String key,String value) throws IOException {
 		FileInputStream fis=new FileInputStream(BaseTest.propertiesPath);
-		FileOutputStream fos=new FileOutputStream(BaseTest.propertiesPath);
+		
 		prop.load(fis);
+		fis.close();
+		FileOutputStream fos=new FileOutputStream(BaseTest.propertiesPath); 
 		prop.setProperty(key, value);
-		prop.store(fos, "Key added");
+		prop.store(fos, key+" is added with the value- "+value);
 		fis.close();
 		fos.close();
 	}
 	
 	public static void writeToApiConfig(String key,String value) throws IOException {
 		FileInputStream fis=new FileInputStream(BaseTest.apiPropertiesPath);
-		FileOutputStream fos=new FileOutputStream(BaseTest.apiPropertiesPath);
 		prop.load(fis);
-		prop.setProperty(key, value);
-		prop.store(fos, "Key added");
 		fis.close();
+		FileOutputStream fos=new FileOutputStream(BaseTest.apiPropertiesPath);
+		prop.setProperty(key, value);
+		prop.store(fos, key+" is added with the value- "+value);
 		fos.close();
-	}//apiPropertiesPath
+	}
+
+	public static String serializeObject(Object value) throws IOException {
+		try(FileOutputStream fos=new FileOutputStream(TestListeners.testName+".ser");
+			ObjectOutputStream os=new ObjectOutputStream(fos)){
+			os.writeObject(value);
+		}
+		return TestListeners.testName+".ser";
+	}
+
+	public static Object deSerializeObject(String path) throws FileNotFoundException, IOException, ClassNotFoundException{
+		try(FileInputStream fis= new FileInputStream(path);
+			ObjectInputStream oi=new ObjectInputStream(fis)){
+			return oi.readObject();
+		}
+	}
 	
 	public static String readApiProperty(String key) throws IOException {
 		FileInputStream fis=new FileInputStream(BaseTest.apiPropertiesPath);
@@ -120,11 +141,52 @@ public class Utils {
 				excelValues.add(value);
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			fis.close();
 			e.printStackTrace();
 		}
 		return excelValues;
+	}
+
+	public static String readSpecificValueFromExcel(String sheetName,String key) throws IOException{
+		FileInputStream fis= new FileInputStream(BaseTest.testDataPath);
+		XSSFWorkbook workbook;
+		Sheet sheet;
+			Row row= null;
+			int lastRowNo;
+			int testColNo=0;
+			Cell c;
+			int lastCol=0;
+			String value="";
+			DataFormatter formatter=new DataFormatter();
+		try{
+			workbook=new XSSFWorkbook(fis);
+			sheet=workbook.getSheet(sheetName);
+			lastRowNo=sheet.getLastRowNum();
+			if(lastRowNo>0){
+				row=sheet.getRow(0);
+				lastCol=row.getLastCellNum();
+			}
+			for(int i=0;i<lastCol;i++){
+				if(row.getCell(i).getStringCellValue().equals(TestListeners.testName)){
+					testColNo=i;
+					break;
+				}
+			}
+			for(int i=1;i<=lastRowNo;i++){
+				c=sheet.getRow(i).getCell(0);
+				if(formatter.formatCellValue(c).equals(key)){
+					c=sheet.getRow(i).getCell(testColNo);
+					value=formatter.formatCellValue(c);
+					break;
+				}
+			}
+		}catch(Exception e){
+			e.printStackTrace();
+			fis.close();
+		}finally{
+			fis.close();
+		}
+		return value;
 	}
 	
 	@SuppressWarnings("deprecation")

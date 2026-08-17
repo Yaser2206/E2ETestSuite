@@ -18,16 +18,11 @@ public class BaseTest {
 	private static ThreadLocal<WebDriver> driver=new ThreadLocal<WebDriver>();;
 	private static Properties prop;
 	private String browser;
-	final static String propertiesPath=
-		    System.getProperty("user.dir")
-		    + "\\src\\main\\java\\resources\\GlobalConfig.properties";
-	final static String apiPropertiesPath=
-		    System.getProperty("user.dir")
-		    + "\\src\\main\\java\\resources\\APITokenConfig.properties";
-	final static String testDataPath=System.getProperty("user.dir")+
-			"\\src\\main\\java\\resources\\testData.xlsx";
-	final static String testJsonPath=System.getProperty("user.dir")+
-			"\\src\\main\\java\\resources\\json\\testData.json";
+	final static String propertiesPath=PathsEnum.propertiesPath.getPath();
+	final static String apiPropertiesPath=PathsEnum.apiPropertiesPath.getPath();
+	final static String testDataPath=PathsEnum.testDataPath.getPath();
+	final static String testJsonPath=PathsEnum.testJsonPath.getPath();
+
 	
 	@BeforeSuite(alwaysRun=true)
 	public void loadProp() throws IOException {
@@ -42,17 +37,17 @@ public class BaseTest {
 	@BeforeMethod(alwaysRun=true)
 	public void loadBrowser() {
 		browser=prop.getProperty("browser");
-		if(browser.equalsIgnoreCase("Chrome")) {
+		if(browser!=null && browser.equalsIgnoreCase("Chrome")) {
 			ChromeOptions options= new ChromeOptions();
 			options.addArguments("--start-maximized");
 			options.addArguments("--disable-notifications");
 			driver.set(new ChromeDriver(options));
-		}else if(browser.equalsIgnoreCase("edge")) {
+		}else if(browser!=null && browser.equalsIgnoreCase("edge")) {
 			EdgeOptions options= new EdgeOptions();
 			options.addArguments("--start-maximized");
 			options.addArguments("--disable-notifications");
 			driver.set(new EdgeDriver(options));
-		}else if(browser.equalsIgnoreCase("firfox")){
+		}else if(browser!=null && browser.equalsIgnoreCase("firfox")){
 			driver.set(new FirefoxDriver());
 			getWebDriver().manage().window().maximize();
 		}else {
