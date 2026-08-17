@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="E2E Suite" >
+
+  <test  name="APITest">
+    <classes>
+      <class name="RestAssuredTest.test.E2EEcartAPITest">
+	      <methods>
+		      <include name="registerUser"/>
+		      <include name="loginTest"/>
+		      <include name="getAllProducts"/>
+		      <include name="getProductIphone"/>
+		      <!-- <include name="ordersValidation"/> -->
+	      </methods>
+      </class>
+    </classes>
+    
+  </test> <!-- Test -->
+</suite> <!-- Suite -->
