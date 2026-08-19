@@ -26,6 +26,7 @@ import RestAssuredTest.PojoClasses.ResponsePojo.LoginResponseEcart;
 import RestAssuredTest.PojoClasses.ResponsePojo.OrderProductDataEcart;
 import RestAssuredTest.PojoClasses.ResponsePojo.OrdersHistoryEcart;
 import RestAssuredTest.PojoClasses.ResponsePojo.RegisterUserResponseEcart;
+import RestAssuredTest.payloads.EcartPayloadsApi;
 import io.restassured.RestAssured;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
@@ -38,57 +39,36 @@ public class E2EEcartAPITest {
 	String iPhoneProductId = "";
 	String serializedFileName="";
 	List<String> orderIds=null;
-
-	@BeforeTest
+	private String testName;
+	
+	public E2EEcartAPITest(String testName){
+		this.testName=testName;
+	}
+	
 	void setUp() {
 		RestAssured.baseURI = "https://www.rahulshettyacademy.com/";
 	}
 
-	@Test(enabled=false)
-	void registerUser() {
-		RegisterUserEcart registerUser = new RegisterUserEcart();
-		registerUser.setFirstName("yaser1234");
-		registerUser.setConfirmPassword("Password@123");
-		registerUser.setGender("Male");
-		registerUser.setLastName("56789");
-		registerUser.setOccupation("Student");
-		registerUser.setRequired(true);
-		registerUser.setUserEmail("yaser1@yaser.com");
-		registerUser.setUserMobile("9876543210");
-		registerUser.setUserPassword("Password@123");
-		registerUser.setUserRole("customer");
-
-		RegisterUserResponseEcart registerUserResponseEcart = given().contentType("application/json").body(registerUser)
-				.when().post("api/ecom/auth/register").then().log().all().extract().as(RegisterUserResponseEcart.class);
-
-		Assert.assertEquals(registerUserResponseEcart.getMessage(), "Registered Successfully");
+	public RegisterUserEcart registerUser() throws IOException {
+		EcartPayloadsApi ecartPayloadsApi= new EcartPayloadsApi();
+		RegisterUserEcart registerUser= 
+				ecartPayloadsApi.registerUserPayload("APITestData", true, testName);
+		return registerUser;
 	}
 
-	// Login
-	@Test(priority=1)
-	public void loginTest() throws IOException  {
-		LoginUserRequestEcart loginUserRequestEcart = new LoginUserRequestEcart();
-		loginUserRequestEcart.setUserEmail(Utils.readSpecificValueFromExcel("APITestData","user"));
-		loginUserRequestEcart.setUserPassword(Utils.readSpecificValueFromExcel("APITestData","pass"));
-		LoginResponseEcart loginResponseEcart = given().contentType("application/json").body(loginUserRequestEcart)
-				.log().all().when().post("api/ecom/auth/login").then().log().all().extract().as(LoginResponseEcart.class);
-		Assert.assertEquals(loginResponseEcart.getmessage(), "Login Successfully");
-		token = loginResponseEcart.getToken();
-		userId = loginResponseEcart.getUserId();
-		Utils.writeToApiConfig("token", token);
-		Utils.writeToApiConfig("userId", userId);
+	public LoginUserRequestEcart loginTest() throws IOException  {
+		EcartPayloadsApi ecartPayloadsApi= new EcartPayloadsApi();
+		LoginUserRequestEcart loginUserRequestEcart=ecartPayloadsApi.loginUserPayload("APITestData", true, testName);
+		LoginResponseEcart loginResponseEcart ;
+		return loginUserRequestEcart;
 	}
 
 	// getAllProducts
 	@Test
 	void getAllProducts() throws IOException {
-		GetAllProductsRequestEcart getAllProductsRequestEcart = new GetAllProductsRequestEcart();
-		getAllProductsRequestEcart.setMaxPrice(null);
-		getAllProductsRequestEcart.setMinPrice(null);
-		getAllProductsRequestEcart.setProductCategory(new ArrayList<>());
-		getAllProductsRequestEcart.setProductFor(new ArrayList<>());
-		getAllProductsRequestEcart.setProductName("");
-		getAllProductsRequestEcart.setProductSubCategory(new ArrayList<>());
+		RestAssured.baseURI = "https://www.rahulshettyacademy.com/";
+		EcartPayloadsApi ecartPayloadsApi= new EcartPayloadsApi();
+		GetAllProductsRequestEcart getAllProductsRequestEcart= ecartPayloadsApi.getAllProductsPayload();
 
 		token=Utils.readApiProperty("token");
 		System.out.println(token);

@@ -212,6 +212,43 @@ public class Utils {
 		return value;
 	}
 	
+	public static Map<String,Object> readExcelAndStoreInMap(String sheetName, boolean shouldTheBooleanbeReturned, String testName) throws IOException {
+		FileInputStream fis= new FileInputStream(BaseTest.testDataPath);
+		Workbook workbook= new XSSFWorkbook(fis);
+		Sheet sheet= workbook.getSheet(sheetName);
+		Row row;
+		Cell cell;
+		int lastRow=sheet.getLastRowNum();
+		int lastCol=0;
+		int testCaseCol=0;
+		String temp="";
+		DataFormatter formatter= new DataFormatter();
+		Map<String, Object> map=new HashMap<>();
+		Object objectVal;
+		if(lastRow>1) {
+			lastCol=sheet.getRow(0).getLastCellNum();
+		}
+		for(int i=0;i<lastCol;i++) {
+			if(sheet.getRow(0).getCell(i).getStringCellValue().equals(testName)) {
+				testCaseCol=i;
+				break;
+			}
+		}
+		for(int i=0;i<=lastRow;i++) {
+			cell=sheet.getRow(i).getCell(0);
+			temp=formatter.formatCellValue(cell);
+			cell=sheet.getRow(i).getCell(testCaseCol);
+			if(shouldTheBooleanbeReturned) {
+				objectVal=formatter.formatCellValue(cell).equalsIgnoreCase("true")?true:
+					formatter.formatCellValue(cell).equalsIgnoreCase("false")?false:formatter.formatCellValue(cell);
+			}else {
+				objectVal=formatter.formatCellValue(cell);
+			}
+			map.put(temp, objectVal);
+		}
+		return map;
+	}
+	
 	@SuppressWarnings("deprecation")
 	public static String readJson(String key) throws IOException {
 		Map<String, String> map=new HashMap<>();
